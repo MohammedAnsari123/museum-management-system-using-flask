@@ -10,7 +10,12 @@ def login_required_admin(f):
     def wrapper(*args, **kwargs):
         if 'user_id' not in session or session.get('role') != 'admin':
             return redirect(url_for('admin.login'))
-        return f(*args, **kwargs)
+        try:
+            return f(*args, **kwargs)
+        except Exception as e:
+            print(f"Admin Route Error: {e}")
+            flash('A system error occurred. Please try again or check the database connection.', 'danger')
+            return redirect(url_for('admin.dashboard'))
     wrapper.__name__ = f.__name__
     return wrapper
 
@@ -40,15 +45,19 @@ def login():
         email = request.form.get('email')
         password = request.form.get('password')
         
-        user = AdminModel.find_by_email(email)
-        
-        if user and check_password_hash(user['password'], password):
-            session['user_id'] = str(user['_id'])
-            session['role'] = user['role']
-            session['email'] = user['email']
-            return redirect(url_for('admin.dashboard'))
-        else:
-            flash('Invalid admin credentials.', 'danger')
+        try:
+            user = AdminModel.find_by_email(email)
+            
+            if user and check_password_hash(user['password'], password):
+                session['user_id'] = str(user['_id'])
+                session['role'] = user['role']
+                session['email'] = user['email']
+                return redirect(url_for('admin.dashboard'))
+            else:
+                flash('Invalid admin credentials.', 'danger')
+        except Exception as e:
+            print(f"Admin Login Error: {e}")
+            flash('Database connection failed. Please check IP Whitelist.', 'danger')
             
     return render_template('admin/login.html')
 
@@ -73,13 +82,18 @@ def get_paginated_data(collection, query, page, per_page=10):
 @login_required_admin
 def dashboard():
     db = get_db()
-    metrics = {
-        'users': db.users.count_documents({}),
-        'museums': db.museums.count_documents({}),
-        'bookings': db.bookings.count_documents({}),
-        'reviews': db.reviews.count_documents({}),
-        'feedbacks': db.feedbacks.count_documents({})
-    }
+    try:
+        metrics = {
+            'users': db.users.count_documents({}),
+            'museums': db.museums.count_documents({}),
+            'bookings': db.bookings.count_documents({}),
+            'reviews': db.reviews.count_documents({}),
+            'feedbacks': db.feedbacks.count_documents({})
+        }
+    except Exception as e:
+        print(f"Dashboard DB Error: {e}")
+        metrics = {'users': 0, 'museums': 0, 'bookings': 0, 'reviews': 0, 'feedbacks': 0}
+        flash('Failed to load dashboard metrics. Check DB connection.', 'warning')
     
     # --- Graph Generation ---
     import matplotlib

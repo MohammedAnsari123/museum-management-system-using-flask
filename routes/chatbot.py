@@ -11,9 +11,12 @@ def ask():
     if not query:
         return jsonify({'error': 'No query provided'}), 400
         
-    response = get_chatbot_response(query)
-    
-    return jsonify({'response': response})
+    try:
+        response = get_chatbot_response(query)
+        return jsonify({'response': response})
+    except Exception as e:
+        print(f"Chatbot Error: {e}")
+        return jsonify({'error': 'Failed to process request. Please check database/model Status.'}), 500
 
 @chatbot_bp.route('/chat')
 def chat_interface():

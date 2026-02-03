@@ -106,20 +106,23 @@ def museums_list():
             {'state': {'$regex': location, '$options': 'i'}}
         ]
     
-    museum_data = list(db.museums.find(filters).skip(skip).limit(per_page))
-    total = db.museums.count_documents(filters)
-    
-    import math
-    total_pages = math.ceil(total / per_page)
-
-    categories = db.museums.distinct('museum_type')
-
-    # Get user's wishlist if logged in
-    wishlist_ids = []
-    if 'user_id' in session:
-        user = db.users.find_one({'_id': ObjectId(session['user_id'])})
-        if user:
-            wishlist_ids = user.get('wishlist', [])
+    try:
+        museum_data = list(db.museums.find(filters).skip(skip).limit(per_page))
+        total = db.museums.count_documents(filters)
+        import math
+        total_pages = math.ceil(total / per_page)
+        categories = db.museums.distinct('museum_type')
+        
+        # Get user's wishlist if logged in
+        wishlist_ids = []
+        if 'user_id' in session:
+            user = db.users.find_one({'_id': ObjectId(session['user_id'])})
+            if user:
+                wishlist_ids = user.get('wishlist', [])
+    except Exception as e:
+        print(f"Museums List DB Error: {e}")
+        flash('Error fetching museums. Please check connection.', 'danger')
+        return redirect(url_for('index'))
 
     return render_template('users/museums.html', 
                            museums=museum_data, 
