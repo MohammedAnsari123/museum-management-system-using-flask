@@ -43,6 +43,16 @@ def create_app():
     def page_not_found(e):
         return render_template('404.html'), 404
 
+    @app.after_request
+    def add_header(response):
+        """
+        Add headers to both force latest IE rendering engine or Chrome Frame,
+        and also to cache the rendered page for 10 minutes.
+        """
+        if 'Cache-Control' not in response.headers:
+            response.headers['Cache-Control'] = 'public, max-age=600'
+        return response
+
     return app
 
 if __name__ == "__main__":
