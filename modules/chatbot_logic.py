@@ -1,6 +1,13 @@
 import os
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+
+# Try to import ML libraries, handle missing libs for non-GPU/Low-Memory environments
+try:
+    import torch
+    from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+    ML_AVAILABLE = True
+except ImportError:
+    ML_AVAILABLE = False
+    print("WARNING: ML libraries (torch/transformers) not found. Chatbot will be disabled.")
 
 # Default to a smaller model for cloud deployment if local is missing
 CLOUD_MODEL_ID = "Qwen/Qwen2.5-0.5B-Instruct"
@@ -14,6 +21,10 @@ def get_generator():
     Checks for local model first, then falls back to Hugging Face Hub.
     """
     global _generator
+    
+    if not ML_AVAILABLE:
+        return None
+
     if _generator is None:
         try:
             # Determine which model to load
@@ -76,9 +87,12 @@ def get_chatbot_response(query, history=None):
     if not is_domain_relevant(query):
         return "I specialize in Indian museums and history. Please ask me about museum visits, tickets, or historical artifacts!"
 
+    if not ML_AVAILABLE:
+        return "I am currently in 'Lite Mode' due to server limits. The AI Brain is disabled, but you can still use the Booking and Museum features!"
+
     generator = get_generator()
     if generator is None:
-        return "I'm currently downloading my brain updates (Model Loading). Please try again in a minute!"
+        return "I'm currently downloading my brain updates (Model Loading) or the AI is unavailable. Please try again in a minute!"
 
     messages = [
         {

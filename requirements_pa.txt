@@ -1,0 +1,17 @@
+flask
+pymongo
+certifi
+pypdf
+python-dotenv
+tiktoken
+# transformers  <-- Commented out to save space
+# torch         <-- Commented out to save space
+# sentence-transformers
+# accelerate
+protobuf
+waitress
+# icrawler      <-- Might be heavy
+reportlab
+qrcode
+Flask-Mail
+# gunicorn      <-- PythonAnywhere uses its own WSGI
