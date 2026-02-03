@@ -1,0 +1,60 @@
+{% extends "admin/layout.html" %}
+
+{% block admin_content %}
+<div class="card mb-4" style="margin-bottom: 2rem;">
+    <h3>Quick Actions</h3>
+    <div class="flex gap-1">
+        <a href="{{ url_for('admin.add_museum') }}" class="btn btn-primary">Add Museum</a>
+        <a href="{{ url_for('admin.users') }}" class="btn btn-outline">View Users</a>
+    </div>
+</div>
+<div class="flex justify-between items-center mb-4">
+    <h2>Admin Overview</h2>
+</div>
+
+<!-- Metrics Grid -->
+<div class="grid mb-4">
+    <div class="card text-center">
+        <h3>Total Users</h3>
+        <p style="font-size: 2.5rem; font-weight: 800; color: var(--primary-color); margin: 0;">{{ metrics.users }}</p>
+    </div>
+    <div class="card text-center">
+        <h3>Total Museums</h3>
+        <p style="font-size: 2.5rem; font-weight: 800; color: var(--secondary-color); margin: 0;">{{ metrics.museums }}
+        </p>
+    </div>
+    <div class="card text-center">
+        <h3>Total Bookings</h3>
+        <p style="font-size: 2.5rem; font-weight: 800; color: var(--accent-color); margin: 0;">{{ metrics.bookings }}
+        </p>
+    </div>
+    <div class="card text-center">
+        <h3>Feedbacks</h3>
+        <p style="font-size: 2.5rem; font-weight: 800; color: var(--text-color); margin: 0;">{{ metrics.feedbacks }}
+        </p>
+    </div>
+</div>
+
+<!-- Charts Section -->
+{% if graphs %}
+<div class="grid mb-4" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));">
+    <div class="card">
+        {% if graphs.top_museums %}
+        <img src="data:image/png;base64,{{ graphs.top_museums }}" alt="Top Museums Chart"
+            style="width: 100%; height: auto;">
+        {% else %}
+        <p class="text-center">Not enough data for Top Museums chart.</p>
+        {% endif %}
+    </div>
+    <div class="card">
+        {% if graphs.museum_types %}
+        <img src="data:image/png;base64,{{ graphs.museum_types }}" alt="Museum Types Chart"
+            style="width: 100%; height: auto;">
+        {% else %}
+        <p class="text-center">Not enough data for Types chart.</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="intro-section text-center mb-4">
+    <h2>Secure Payment</h2>
+    <p>Complete your booking for <strong>{{ booking.museum_name }}</strong></p>
+</div>
+
+<div class="card max-width-600 mx-auto" style="padding: 2rem;">
+    <div class="flex justify-between items-center mb-4" style="border-bottom: 1px solid #eee; padding-bottom: 1rem;">
+        <div>
+            <h3 style="margin: 0;">Total Amount</h3>
+            <p class="text-muted" style="margin: 0;">{{ booking.tickets }} Ticket(s) on {{ booking.date }}</p>
+        </div>
+        <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color);">
+            ₹ {{ booking.tickets * 50 }} <!-- Assuming 50rs per ticket -->
+        </div>
+    </div>
+
+    <form action="{{ url_for('users.process_payment') }}" method="POST" id="paymentForm">
+        <input type="hidden" name="payment_method" id="paymentMethod" value="Card">
+
+        <!-- Payment Tabs -->
+        <div class="flex mb-4" style="border-bottom: 2px solid #eee;">
+            <button type="button" class="tab-btn active" onclick="selectTab('Card')"
+                style="flex: 1; padding: 0.5rem; border: none; background: none; border-bottom: 2px solid var(--primary-color); font-weight: bold;">Card</button>
+            <button type="button" class="tab-btn" onclick="selectTab('Online')"
+                style="flex: 1; padding: 0.5rem; border: none; background: none; color: #888;">Online</button>
+            <button type="button" class="tab-btn" onclick="selectTab('Cash')"
+                style="flex: 1; padding: 0.5rem; border: none; background: none; color: #888;">Cash</button>
+        </div>
+
+        <!-- Card Section -->
+        <div id="section-Card">
+            <label class="filter-label">Cardholder Name</label>
+            <input type="text" class="filter-input" placeholder="John Doe">
+
+            <label class="filter-label">Card Number</label>
+            <div style="position: relative;">
+                <input type="text" class="filter-input" placeholder="0000 0000 0000 0000" maxlength="19" id="cardNum">
+                <i class="fas fa-credit-card" style="position: absolute; right: 10px; top: 12px; color: #888;"></i>
+            </div>
+
+            <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <label class="filter-label">Expiry Date</label>
+                    <input type="text" class="filter-input" placeholder="MM/YY" maxlength="5">
+                </div>
+                <div>
+                    <label class="filter-label">CVV</label>
+                    <input type="password" class="filter-input" placeholder="123" maxlength="3">
+                </div>
+            </div>
+        </div>
+
+        <!-- Online Section -->
+        <div id="section-Online" style="display: none;">
+            <label class="filter-label">UPI ID / VPA</label>
+            <input type="text" class="filter-input" placeholder="username@upi">
+            <p class="text-muted" style="font-size: 0.8rem; margin-top: 0.5rem;">Or scan QR code using any UPI App</p>
+            <div style="text-align: center; margin: 1rem 0; background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+                <i class="fas fa-qrcode" style="font-size: 4rem; color: #333;"></i>
+                <p style="margin-top: 0.5rem; font-weight: bold;">MOCK QR CODE</p>
+            </div>
+        </div>
+
+        <!-- Cash Section -->
+        <div id="section-Cash" style="display: none;">
+            <div
+                style="text-align: center; padding: 2rem; background: #fffbe6; border: 1px solid #ffe58f; border-radius: 8px;">
+                <i class="fas fa-money-bill-wave" style="font-size: 3rem; color: #faad14; margin-bottom: 1rem;"></i>
+                <h4>Pay at Museum</h4>
+                <p>Please present your ticket at the counter and pay <strong>₹ {{ booking.tickets * 50 }}</strong> in
+                    cash.</p>
+                <p class="text-muted" style="font-size: 0.9rem;">Your ticket will be marked as "Pay on Arrival".</p>
+            </div>
+        </div>
+
+        <div class="alert alert-info" style="font-size: 0.9rem; margin-top: 1rem;">
+            <i class="fas fa-lock"></i> Secure Transaction (Mock Mode)
+        </div>
+
+        <button type="submit" class="btn btn-primary w-full" style="width: 100%; margin-top: 1rem; padding: 1rem;">
+            Confirm Booking
+        </button>
+    </form>
+</div>
+
+<script>
+    function selectTab(method) {
+        // Update Hidden Input
+        document.getElementById('paymentMethod').value = method;
+
+        // Update Tabs UI
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.style.borderBottom = 'none';
+            btn.style.fontWeight = 'normal';
+            btn.style.color = '#888';
+        });
+        const activeBtn = event.target;
+        activeBtn.style.borderBottom = '2px solid var(--primary-color)';
+        activeBtn.style.fontWeight = 'bold';
+        activeBtn.style.color = 'var(--primary-color)';
+
+        // Show/Hide Sections
+        ['Card', 'Online', 'Cash'].forEach(m => {
+            document.getElementById('section-' + m).style.display = (m === method) ? 'block' : 'none';
+        });
+
+        // Toggle required attributes
+        const cardInputs = document.querySelectorAll('#section-Card input');
+        const onlineInputs = document.querySelectorAll('#section-Online input');
+
+        if (method === 'Card') {
+            cardInputs.forEach(i => i.required = true);
+            onlineInputs.forEach(i => i.required = false);
+        } else if (method === 'Online') {
+            cardInputs.forEach(i => i.required = false);
+            onlineInputs.forEach(i => i.required = true);
+        } else {
+            cardInputs.forEach(i => i.required = false);
+            onlineInputs.forEach(i => i.required = false);
+        }
+    }
+
+    // Card Formatting
+    document.getElementById('cardNum').addEventListener('input', function (e) {
+        e.target.value = e.target.value.replace(/[^\d]/g, '').replace(/(.{4})/g, '$1 ').trim();
+    });
+
+    document.getElementById('paymentForm').onsubmit = function () {
+        const btn = this.querySelector('button[type="submit"]');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        btn.disabled = true;
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PixelPast{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Playfair+Display:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/utilities.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-header">
+            <a href="{{ url_for('index') }}" class="navbar-brand">
+                <i class="fas fa-landmark"></i> PixelPast
+            </a>
+            <button class="nav-toggle" id="nav-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <div class="nav-links" id="nav-links">
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('users.museums_list') }}">Explore</a>
+            <a href="{{ url_for('users.map_view') }}">Map View</a>
+            <a href="{{ url_for('chatbot.chat_interface') }}">AI Chat</a>
+
+            {% if session.get('user_id') %}
+            {% if session.get('role') == 'admin' %}
+            <a href="{{ url_for('admin.dashboard') }}">Admin Dashboard</a>
+            <a href="{{ url_for('admin.logout') }}">Logout</a>
+            {% else %}
+            <a href="{{ url_for('users.dashboard') }}">My Dashboard</a>
+            <a href="{{ url_for('users.logout') }}">Logout</a>
+            {% endif %}
+            {% else %}
+            <a href="{{ url_for('users.login') }}">Login</a>
+            <a href="{{ url_for('users.register') }}" class="btn btn-primary nav-signup-btn">Sign Up</a>
+            <a href="{{ url_for('admin.login') }}" class="nav-admin-link">Admin</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    {% block main_container %}
+    <div class="container">
+        {% block flash_messages %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+        {% endblock %}
+
+        {% block content %}{% endblock %}
+    </div>
+    {% endblock %}
+
+    <!-- Chatbot Widget Placeholder -->
+    <!-- Chatbot Widget Placeholder Removed -->
+
+    <!-- Footer -->
+    {% block footer %}
+    <footer>
+        <p>&copy; 2026 PixelPast. Preserving Heritage, Inspiring Minds.</p>
+        <p>
+            <a href="{{ url_for('admin.login') }}" class="footer-admin-link">Admin Access</a>
+        </p>
+    </footer>
+    {% endblock %}
+
+    <!-- We will add the Chatbox UI logic in next steps -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>

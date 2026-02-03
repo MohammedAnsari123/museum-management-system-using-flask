@@ -1,0 +1,71 @@
+{% extends "admin/layout.html" %}
+
+{% block admin_content %}
+<div class="flex justify-between items-center mb-4">
+    <h2>All Bookings</h2>
+</div>
+
+<!-- Toolbar -->
+<form class="toolbar" method="GET">
+    <input type="text" name="q" class="search-input" placeholder="Search by User Email or Museum Name..."
+        value="{{ request.args.get('q', '') }}">
+    <button type="submit" class="btn btn-primary">Search</button>
+    <a href="{{ url_for('admin.bookings') }}" class="btn btn-outline">Reset</a>
+</form>
+
+<div class="card">
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>User Email</th>
+                    <th>Museum</th>
+                    <th>Date</th>
+                    <th>Tickets</th>
+                    <th>Payment Method</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                    <td>{{ booking.email }}</td>
+                    <td>{{ booking.museum_name }}</td>
+                    <td>{{ booking.tour_date }}</td>
+                    <td><strong>{{ booking.tickets }}</strong></td>
+                    <td>
+                        <span class="badge badge-info">{{ booking.payment_method }}</span>
+                    </td>
+                    <td>
+                        {% if booking.payment_status == 'Paid' %}
+                        <span class="text-success" style="font-weight: bold;">Paid</span>
+                        {% else %}
+                        <span class="text-warning" style="font-weight: bold;">Pending</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center">No bookings found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="pagination-controls">
+        <a href="{{ url_for('admin.bookings', page=current_page-1, q=request.args.get('q', '')) }}"
+            class="page-btn {% if current_page == 1 %}disabled{% endif %}">
+            <i class="fas fa-chevron-left"></i> Previous
+        </a>
+        <span class="page-info">Page {{ current_page }} of {{ total_pages }}</span>
+        <a href="{{ url_for('admin.bookings', page=current_page+1, q=request.args.get('q', '')) }}"
+            class="page-btn {% if current_page == total_pages %}disabled{% endif %}">
+            Next <i class="fas fa-chevron-right"></i>
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

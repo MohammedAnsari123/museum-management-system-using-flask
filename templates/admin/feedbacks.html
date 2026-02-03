@@ -1,0 +1,57 @@
+{% extends "admin/layout.html" %}
+
+{% block admin_content %}
+<div class="flex justify-between items-center mb-4">
+    <h2>User Feedbacks</h2>
+</div>
+
+<!-- Toolbar -->
+<form class="toolbar" method="GET">
+    <input type="text" name="q" class="search-input" placeholder="Search messages..."
+        value="{{ request.args.get('q', '') }}">
+    <button type="submit" class="btn btn-primary">Search</button>
+    <a href="{{ url_for('admin.feedbacks') }}" class="btn btn-outline">Reset</a>
+</form>
+
+<div class="card">
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Message</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for feedback in feedbacks %}
+                <tr>
+                    <td>{{ feedback.email or 'Anonymous' }}</td>
+                    <td>{{ feedback.message }}</td>
+                    <td>{{ feedback.created_at.strftime('%Y-%m-%d') if feedback.created_at else 'N/A' }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" class="text-center">No feedbacks found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="pagination-controls">
+        <a href="{{ url_for('admin.feedbacks', page=current_page-1, q=request.args.get('q', '')) }}"
+            class="page-btn {% if current_page == 1 %}disabled{% endif %}">
+            <i class="fas fa-chevron-left"></i> Previous
+        </a>
+        <span class="page-info">Page {{ current_page }} of {{ total_pages }}</span>
+        <a href="{{ url_for('admin.feedbacks', page=current_page+1, q=request.args.get('q', '')) }}"
+            class="page-btn {% if current_page == total_pages %}disabled{% endif %}">
+            Next <i class="fas fa-chevron-right"></i>
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

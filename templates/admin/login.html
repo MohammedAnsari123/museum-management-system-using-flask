@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block flash_messages %}{% endblock %}
+
+{% block content %}
+<div style="max-width: 450px; margin: 4rem auto;">
+    <div class="card" style="border-top: 4px solid var(--danger);">
+        <h2 class="text-center" style="color: var(--danger);">Admin Portal</h2>
+        <p class="text-center" style="margin-bottom: 2rem;">Secure Access for Museum Administrators</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}" style="text-align: center; margin-bottom: 1.5rem; padding: 0.75rem;">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" placeholder="admin@example.com" required>
+
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="••••••••" required>
+
+            <button type="submit" class="btn btn-danger" style="width: 100%; margin-top: 1rem;">Login to
+                Dashboard</button>
+        </form>
+
+        <div class="text-center mt-4" style="font-size: 0.9rem;">
+            New Administrator? <a href="{{ url_for('admin.register') }}"
+                style="color: var(--danger); font-weight: 600;">Register Account</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

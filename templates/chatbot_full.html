@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div
+    style="max-width: 800px; margin: 2rem auto; height: 70vh; display: flex; flex-direction: column; background: white; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid #e9ecef;">
+    <div
+        style="padding: 1.5rem; background: var(--primary-color); color: white; border-radius: 12px 12px 0 0; display: flex; align-items: center; gap: 1rem;">
+        <i class="fas fa-robot" style="font-size: 2rem;"></i>
+        <div>
+            <h2 style="margin: 0; color: white; font-size: 1.5rem;">Museum Guide AI</h2>
+            <p style="margin: 0; opacity: 0.9; font-size: 0.9rem;">Ask me anything about Indian museums, history, or
+                getting tickets.</p>
+        </div>
+    </div>
+
+    <div id="full-chat-messages" style="flex: 1; padding: 2rem; overflow-y: auto; background: #f8f9fa;">
+        <div style="margin-bottom: 1.5rem; text-align: left;">
+            <div
+                style="background: white; padding: 1rem 1.5rem; border-radius: 0 12px 12px 12px; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #eee;">
+                Hello! I am your dedicated museum assistant. How can I help you plan your visit today?
+            </div>
+        </div>
+    </div>
+
+    <div style="padding: 1.5rem; background: white; border-top: 1px solid #e9ecef; border-radius: 0 0 12px 12px;">
+        <div style="display: flex; gap: 1rem;">
+            <input type="text" id="full-chat-input" placeholder="Type your question here..."
+                style="flex: 1; padding: 1rem; border: 2px solid #e9ecef; border-radius: 8px; margin: 0; font-size: 1rem;">
+            <button id="full-send-btn" class="btn btn-primary" style="padding: 0 2rem; border-radius: 8px;">
+                <i class="fas fa-paper-plane"></i> Send
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const fullMessages = document.getElementById('full-chat-messages');
+    const fullInput = document.getElementById('full-chat-input');
+    const fullSendBtn = document.getElementById('full-send-btn');
+
+    async function sendFullChat() {
+        const text = fullInput.value.trim();
+        if (!text) return;
+
+        appendFullMessage(text, 'user');
+        fullInput.value = '';
+
+        // Loader
+        const loaderId = appendFullLoader();
+
+        try {
+            const response = await fetch('/chatbot/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: text })
+            });
+            const data = await response.json();
+
+            removeFullLoader(loaderId);
+            appendFullMessage(data.response || "Sorry, I couldn't process that.", 'bot');
+        } catch (error) {
+            removeFullLoader(loaderId);
+            appendFullMessage("Error connecting to AI.", 'bot');
+        }
+    }
+
+    function appendFullMessage(text, sender) {
+        const div = document.createElement('div');
+        div.style.marginBottom = '1.5rem';
+        div.style.textAlign = sender === 'user' ? 'right' : 'left';
+
+        const bubble = document.createElement('div');
+        bubble.style.padding = '1rem 1.5rem';
+        bubble.style.display = 'inline-block';
+        bubble.style.maxWidth = '70%';
+        bubble.style.lineHeight = '1.5';
+        bubble.style.fontSize = '1rem';
+        bubble.style.textAlign = 'left';
+
+        if (sender === 'user') {
+            bubble.style.background = 'var(--primary-color)';
+            bubble.style.color = 'white';
+            bubble.style.borderRadius = '12px 0 12px 12px';
+            bubble.style.boxShadow = '0 2px 4px rgba(0,95,115,0.2)';
+        } else {
+            bubble.style.background = 'white';
+            bubble.style.color = 'var(--text-color)';
+            bubble.style.borderRadius = '0 12px 12px 12px';
+            bubble.style.border = '1px solid #eee';
+            bubble.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+        }
+
+        bubble.innerText = text;
+        div.appendChild(bubble);
+        fullMessages.appendChild(div);
+        fullMessages.scrollTop = fullMessages.scrollHeight;
+    }
+
+    function appendFullLoader() {
+        const id = 'loader-' + Date.now();
+        const div = document.createElement('div');
+        div.id = id;
+        div.style.textAlign = 'left';
+        div.style.marginBottom = '1.5rem';
+        div.innerHTML = `<div style="background: white; padding: 1rem 1.5rem; border-radius: 0 12px 12px 12px; display: inline-block; border: 1px solid #eee; color: #888;">Thinking...</div>`;
+        fullMessages.appendChild(div);
+        fullMessages.scrollTop = fullMessages.scrollHeight;
+        return id;
+    }
+
+    function removeFullLoader(id) {
+        const loader = document.getElementById(id);
+        if (loader) loader.remove();
+    }
+
+    fullSendBtn.addEventListener('click', sendFullChat);
+    fullInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendFullChat();
+    });
+</script>
+{% endblock %}

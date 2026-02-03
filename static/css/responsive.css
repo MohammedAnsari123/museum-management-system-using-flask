@@ -1,0 +1,185 @@
+/* Responsive Design using Mobile-First Approach */
+
+/* =========================================
+   Mobile Devices (Phones, < 1024px) - Updated breakpoint for Tablet support
+   ========================================= */
+@media (max-width: 1024px) {
+
+    /* Layout Adjustments */
+    .container {
+        width: 100%;
+        padding: 0 15px;
+    }
+
+    /* Navbar - Mobile View */
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1rem;
+    }
+
+    .navbar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+
+    .nav-toggle {
+        display: block;
+        /* Visible on mobile */
+        background: none;
+        border: none;
+        color: var(--primary-color);
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+
+    .nav-links {
+        display: none;
+        /* Hidden by default */
+        flex-direction: column;
+        width: 100%;
+        gap: 0;
+        text-align: center;
+        margin-top: 1rem;
+        background: white;
+        border-top: 1px solid #eee;
+    }
+
+    .nav-links.active {
+        display: flex;
+        /* Shown when toggled */
+    }
+
+    .nav-links a {
+        display: block;
+        padding: 1rem;
+        border-bottom: 1px solid #f9f9f9;
+        width: 100%;
+    }
+
+    /* Admin Dashboard on Mobile */
+    .admin-wrapper {
+        position: relative;
+        /* Context for absolute sidebar */
+        overflow: hidden;
+    }
+
+    .admin-sidebar {
+        position: absolute;
+        top: 0;
+        left: -260px;
+        /* Hidden off-screen */
+        height: 100%;
+        z-index: 1000;
+        transition: left 0.3s ease-in-out;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .admin-sidebar.active {
+        left: 0;
+        /* Slide in */
+    }
+
+    .sidebar-toggle {
+        display: block;
+        /* Visible on mobile */
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        cursor: pointer;
+        padding: 0.5rem;
+        margin-right: 0.5rem;
+    }
+
+    .admin-main {
+        width: 100%;
+        height: 100%;
+    }
+
+    /* Cards and Grids */
+    .grid {
+        grid-template-columns: 1fr;
+        /* Single column */
+    }
+
+    .card {
+        margin-bottom: 1rem;
+    }
+
+    /* Tables */
+    table {
+        font-size: 0.9rem;
+    }
+
+    th,
+    td {
+        padding: 0.5rem;
+    }
+
+    /* Toolbar */
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-input,
+    .filter-select,
+    .btn {
+        width: 100%;
+    }
+}
+
+/* =========================================
+   Desktop (> 1024px)
+   ========================================= */
+@media (min-width: 1025px) {
+    .nav-toggle {
+        display: none;
+    }
+
+    .sidebar-toggle {
+        display: none;
+    }
+
+    .navbar-header {
+        display: contents;
+        /* Allow children to flow naturally in flex container */
+    }
+}
+
+/* =========================================
+   Laptops and Desktops (Default, > 1024px)
+   ========================================= */
+/* Default styles in style.css cover this */
+
+
+/* =========================================
+   Large Screens / 4K Monitors (> 1440px)
+   ========================================= */
+@media (min-width: 1600px) {
+    html {
+        font-size: 18px;
+        /* Scale up base font size */
+    }
+
+    .container,
+    .admin-container,
+    .admin-wrapper {
+        max-width: 1800px;
+        margin: 0 auto;
+        /* Center layout on very wide screens */
+    }
+
+    .card {
+        padding: 2.5rem;
+        /* More padding */
+    }
+
+    h1,
+    h2,
+    h3 {
+        margin-bottom: 1.5rem;
+    }
+}

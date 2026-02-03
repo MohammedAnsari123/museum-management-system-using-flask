@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card max-w-600 mx-auto">
+    <h2 class="text-center" style="margin-bottom: 2rem;">Share Your Feedback</h2>
+    <p class="text-center" style="margin-bottom: 2rem; color: var(--text-light);">
+        We value your opinion! Let us know how we can improve your experience.
+    </p>
+
+    <form method="POST">
+        {% if not session.get('user_id') %}
+        <label for="email">Email Address (Optional)</label>
+        <input type="email" id="email" name="email" placeholder="Your email...">
+        {% endif %}
+
+        <label for="message">Message</label>
+        <textarea id="message" name="message" rows="5" required placeholder="Type your feedback here..."></textarea>
+
+        <div class="text-center mt-1">
+            <button type="submit" class="btn btn-primary">Submit Feedback</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

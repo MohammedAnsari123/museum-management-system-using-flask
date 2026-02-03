@@ -1,0 +1,67 @@
+{% extends "admin/layout.html" %}
+
+{% block admin_content %}
+<div class="flex justify-between items-center mb-4">
+    <h2>User Reviews</h2>
+</div>
+
+<!-- Toolbar -->
+<form class="toolbar" method="GET">
+    <input type="text" name="q" class="search-input" placeholder="Search comments..."
+        value="{{ request.args.get('q', '') }}">
+    <select name="rating" class="filter-select">
+        <option value="">All Ratings</option>
+        <option value="5" {% if request.args.get('rating')=='5' %}selected{% endif %}>5 Stars</option>
+        <option value="4" {% if request.args.get('rating')=='4' %}selected{% endif %}>4 Stars</option>
+        <option value="3" {% if request.args.get('rating')=='3' %}selected{% endif %}>3 Stars</option>
+        <option value="2" {% if request.args.get('rating')=='2' %}selected{% endif %}>2 Stars</option>
+        <option value="1" {% if request.args.get('rating')=='1' %}selected{% endif %}>1 Star</option>
+    </select>
+    <button type="submit" class="btn btn-primary">Search</button>
+    <a href="{{ url_for('admin.reviews') }}" class="btn btn-outline">Reset</a>
+</form>
+
+<div class="card">
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Museum</th>
+                    <th>User</th>
+                    <th>Rating</th>
+                    <th>Comment</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for review in reviews %}
+                <tr>
+                    <td>{{ review.museum_name }}</td>
+                    <td>{{ review.email }}</td>
+                    <td>{{ '⭐' * review.rating }}</td>
+                    <td>{{ review.comment }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="text-center">No reviews found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="pagination-controls">
+        <a href="{{ url_for('admin.reviews', page=current_page-1, q=request.args.get('q', ''), rating=request.args.get('rating', '')) }}"
+            class="page-btn {% if current_page == 1 %}disabled{% endif %}">
+            <i class="fas fa-chevron-left"></i> Previous
+        </a>
+        <span class="page-info">Page {{ current_page }} of {{ total_pages }}</span>
+        <a href="{{ url_for('admin.reviews', page=current_page+1, q=request.args.get('q', ''), rating=request.args.get('rating', '')) }}"
+            class="page-btn {% if current_page == total_pages %}disabled{% endif %}">
+            Next <i class="fas fa-chevron-right"></i>
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

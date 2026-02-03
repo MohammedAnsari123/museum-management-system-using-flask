@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="text-center mb-4 intro-section">
+    <h2>Explore Heritage</h2>
+    <p class="max-width-600 mx-auto">
+        Discover India's rich history through our curated collection of museums.
+    </p>
+</div>
+
+<div class="grid">
+    <!-- Filter Section -->
+    <div class="card filter-card">
+        <form method="GET" action="{{ url_for('users.museums_list') }}" class="filter-form">
+            <div>
+                <label for="q" class="filter-label">Search</label>
+                <input type="text" id="q" name="q" value="{{ search_query }}"
+                    placeholder="Museum name or description..." class="filter-input">
+            </div>
+            <div>
+                <label for="location" class="filter-label">Location</label>
+                <input type="text" id="location" name="location" value="{{ search_location }}"
+                    placeholder="City or State..." class="filter-input">
+            </div>
+            <div>
+                <label for="category" class="filter-label">Type</label>
+                <select id="category" name="category" class="filter-input">
+                    <option value="">All Types</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}" {% if cat==search_category %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex gap-1" style="display: flex; gap: 1rem;">
+                <!-- inline style remains for flex ratio as it's layout specific or can be util class -->
+                <button type="submit" class="btn btn-primary" style="flex: 2;">
+                    <i class="fas fa-search"></i> Find
+                </button>
+                <a href="{{ url_for('users.museums_list') }}" class="btn btn-outline"
+                    style="flex: 1; text-align: center;">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    {% if not museums %}
+    <div class="card text-center" style="grid-column: 1 / -1; padding: 4rem;">
+        <i class="fas fa-search" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+        <h3>No museums found</h3>
+        <p>Try adjusting your filters or search for something else.</p>
+    </div>
+    {% endif %}
+
+    {% for museum in museums %}
+    <div class="card flex flex-col" style="position: relative; overflow: hidden;">
+        <!-- decorative accent -->
+        <div class="museum-card-decorative"></div>
+
+        <div class="museum-card-content">
+            <div class="museum-card-header">
+                <span class="badge">{{ museum.museum_type }}</span>
+
+                <!-- Wishlist Heart -->
+                <button class="wishlist-btn" onclick="toggleWishlist(this, '{{ museum._id }}')" title="Add to Wishlist">
+                    {% if museum._id|string in wishlist_ids %}
+                    <i class="fas fa-heart" style="color: #e31b23;"></i>
+                    {% else %}
+                    <i class="far fa-heart"></i>
+                    {% endif %}
+                </button>
+
+                {% if museum.max_daily_capacity %}
+                <span class="museum-capacity">
+                    <i class="fas fa-users"></i> Cap: {{ museum.max_daily_capacity }}
+                </span>
+                {% endif %}
+            </div>
+
+            <h3 class="museum-title">{{ museum.museum_name }}</h3>
+
+            <p class="museum-location">
+                <i class="fas fa-map-marker-alt" style="color: var(--primary-dark);"></i>
+                {{ museum.city }}{% if museum.state %}, {{ museum.state }}{% endif %}
+            </p>
+
+            <p class="museum-description">
+                {{ museum.description }}
+            </p>
+        </div>
+
+        <div class="museum-actions">
+            <button class="btn btn-primary" style="flex: 1;"
+                onclick="openBookingModal('{{ museum._id }}', '{{ museum.museum_name }}', '{{ museum.museum_id }}')">
+                <i class="fas fa-ticket-alt"></i> Book
+            </button>
+            <button class="btn btn-outline" style="flex: 1;"
+                onclick="openReviewModal('{{ museum._id }}', '{{ museum.museum_name }}')">
+                <i class="fas fa-star"></i> Rate
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+<div class="pagination">
+    {% if page > 1 %}
+    <a href="{{ url_for('users.museums_list', page=page-1, q=search_query, location=search_location, category=search_category) }}"
+        class="btn btn-outline">&laquo; Previous</a>
+    {% endif %}
+
+    <span class="page-info">
+        Page {{ page }} of {{ total_pages }}
+    </span>
+
+    {% if page < total_pages %} <a
+        href="{{ url_for('users.museums_list', page=page+1, q=search_query, location=search_location, category=search_category) }}"
+        class="btn btn-outline">Next &raquo;</a>
+        {% endif %}
+</div>
+
+<!-- Booking Modal -->
+<div id="bookingModal" class="modal">
+    <div class="modal-content">
+
+        <button onclick="closeBookingModal()" class="modal-close">&times;</button>
+
+        <h3 class="modal-title">Book Your Visit</h3>
+        <p class="modal-subtitle">
+            Booking for: <br>
+            <span id="modalMuseumName" class="modal-museum-name"></span>
+        </p>
+
+        <form id="bookingForm" onsubmit="submitBookingNew(event)">
+            <input type="hidden" id="modalMuseumId">
+
+            <label class="filter-label" style="font-size: 0.9rem;">Date of Visit</label>
+            <input type="date" id="visitDate" required> <!-- min set by JS -->
+
+            <label class="filter-label" style="font-size: 0.9rem;">Number of Tickets</label>
+            <div class="flex items-center gap-1">
+                <input type="number" id="ticketCount" min="1" max="10" value="1" required class="mb-1">
+                <span style="font-size: 0.8rem; color: #888; margin-bottom: 1rem;">(Max 10)</span>
+            </div>
+
+            <div class="flex gap-1" style="margin-top: 2rem;">
+                <button type="button" class="btn btn-outline" style="flex: 1;"
+                    onclick="closeBookingModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Confirm</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Review Modal -->
+<div id="reviewModal" class="modal">
+    <div class="modal-content">
+        <h3 class="modal-title">Write a Review</h3>
+        <p class="modal-subtitle">
+            Sharing experience for: <br>
+            <span id="reviewMuseumName" class="modal-museum-name"></span>
+        </p>
+
+        <form id="reviewForm" method="POST" action="">
+            <label class="filter-label">Rating</label>
+            <select name="rating" required>
+                <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+                <option value="4">⭐⭐⭐⭐ Good</option>
+                <option value="3">⭐⭐⭐ Average</option>
+                <option value="2">⭐⭐ Poor</option>
+                <option value="1">⭐ Terrible</option>
+            </select>
+
+            <label class="filter-label">Your Experience</label>
+            <textarea name="comment" rows="4" placeholder="What did you enjoy the most?" required></textarea>
+
+            <div class="flex gap-1" style="margin-top: 2rem;">
+                <button type="button" class="btn btn-outline" style="flex: 1;"
+                    onclick="closeReviewModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Set min date for date picker
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('visitDate').setAttribute('min', today);
+
+    const isLoggedIn = {{ 'true' if session.get('user_id') else 'false' }};
+
+    async function toggleWishlist(btn, museumId) {
+        if (!isLoggedIn) {
+            window.location.href = "{{ url_for('users.login') }}";
+            return;
+        }
+
+        // Stop propagation if button is inside a clickable card
+        if (event) event.stopPropagation();
+
+        const icon = btn.querySelector('i');
+        const isAdded = icon.classList.contains('fas');
+
+        // Optimistic UI update
+        if (isAdded) {
+            icon.classList.remove('fas');
+            icon.classList.add('far');
+            icon.style.color = '#888'; // Revert to default
+        } else {
+            icon.classList.remove('far');
+            icon.classList.add('fas');
+            icon.style.color = '#e31b23';
+        }
+
+        try {
+            const response = await fetch(`/wishlist/toggle/${museumId}`, { method: 'POST' });
+            if (!response.ok) {
+                if (response.status === 401) {
+                    alert("Please login to save to wishlist.");
+                    window.location.href = "{{ url_for('users.login') }}";
+                }
+                throw new Error('Failed');
+            }
+            const result = await response.json();
+            console.log(result);
+        } catch (error) {
+            console.error(error);
+            // Revert on error
+            if (isAdded) {
+                icon.classList.remove('far');
+                icon.classList.add('fas');
+                icon.style.color = '#e31b23';
+            } else {
+                icon.classList.remove('fas');
+                icon.classList.add('far');
+                icon.style.color = '#888';
+            }
+        }
+    }
+
+    function openBookingModal(museumId, museumName) {
+        if (!isLoggedIn) {
+            window.location.href = "{{ url_for('users.login') }}";
+            return;
+        }
+
+        document.getElementById('modalMuseumId').value = museumId;
+        document.getElementById('modalMuseumName').innerText = museumName;
+        // Reset form
+        document.getElementById('bookingForm').reset();
+        document.getElementById('visitDate').setAttribute('min', today);
+
+        document.getElementById('bookingModal').style.display = 'block';
+    }
+
+    function closeBookingModal() {
+        document.getElementById('bookingModal').style.display = 'none';
+    }
+
+    function openReviewModal(museumId, museumName) {
+        document.getElementById('reviewMuseumName').innerText = museumName;
+        document.getElementById('reviewForm').action = "/review/" + museumId;
+        document.getElementById('reviewModal').style.display = 'block';
+    }
+
+    function closeReviewModal() {
+        document.getElementById('reviewModal').style.display = 'none';
+    }
+
+    // Close modal on click outside
+    window.onclick = function (event) {
+        if (event.target == document.getElementById('bookingModal')) {
+            closeBookingModal();
+        }
+        if (event.target == document.getElementById('reviewModal')) {
+            closeReviewModal();
+        }
+    }
+
+    async function submitBookingNew(event) {
+        event.preventDefault();
+
+        const museumId = document.getElementById('modalMuseumId').value;
+        const date = document.getElementById('visitDate').value;
+        const tickets = document.getElementById('ticketCount').value;
+
+        const btn = event.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerText;
+        btn.innerText = "Processing...";
+        btn.disabled = true;
+
+        try {
+            const formData = new FormData();
+            formData.append('date', date);
+            formData.append('tickets', tickets);
+
+            const response = await fetch(`/book/${museumId}`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                console.log("Booking Response:", result);
+                if (result.payment_required) {
+                    // Redirecting to payment
+                    window.location.href = result.redirect_url;
+                } else {
+                    alert("Success: " + (result.message || "Booking processed."));
+                    closeBookingModal();
+                    // Reload to reflect changes if needed
+                    window.location.reload();
+                }
+            } else if (response.status === 401 || result.error === 'Unauthorized') {
+                alert("Session expired. Please login again.");
+                window.location.href = "{{ url_for('users.login') }}";
+            } else {
+                alert("Error: " + (result.error || "Booking failed"));
+            }
+        } catch (error) {
+            alert("An error occurred. Please try again.");
+            console.error(error);
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    }
+</script>
+{% endblock %}

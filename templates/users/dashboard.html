@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card dashboard-header">
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 style="margin-bottom: 0;">My Dashboard</h2>
+        </div>
+        <div>
+            <span style="font-weight: 600; color: var(--text-color);">{{ session['email'] }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="dashboard-section-header">
+        <h3 style="margin: 0; color: var(--secondary-color);">My Bookings</h3>
+        <a href="{{ url_for('users.museums_list') }}" class="btn btn-outline" style="font-size: 0.9rem;">
+            <i class="fas fa-plus"></i> New Booking
+        </a>
+    </div>
+
+    {% if bookings %}
+    <div style="overflow-x: auto;">
+        <table class="bookings-table">
+            <thead>
+                <tr>
+                    <th>Museum</th>
+                    <th>Visit Date</th>
+                    <th>Tickets</th>
+                    <th>Booked On</th>
+                    <th style="text-align: center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                    <td style="font-weight: 600; color: var(--text-color);">
+                        {{ booking.museum_name }}
+                    </td>
+                    <td style="color: #555;">
+                        <i class="far fa-calendar-alt"></i> {{ booking.tour_date }}
+                    </td>
+                    <td>
+                        <span class="badge">{{ booking.tickets }} Tickets</span>
+                    </td>
+                    <td style="color: #888; font-size: 0.9rem;">
+                        {{ booking.booking_date.strftime('%b %d, %Y') }}
+                    </td>
+                    <td style="text-align: center;">
+                        <div class="flex gap-1" style="justify-content: center;">
+                            <button class="btn btn-sm btn-outline" style="border-color: #ffd700; color: #b8860b;"
+                                onclick="openReviewModal('{{ booking.museum_id }}', '{{ booking.museum_name }}')">
+                                <i class="fas fa-star"></i> Rate
+                            </button>
+                            <button class="btn btn-sm btn-outline"
+                                style="border-color: var(--primary-color); color: var(--primary-color);"
+                                onclick="openFeedbackModal('{{ booking.museum_id }}', '{{ booking.museum_name }}')">
+                                <i class="fas fa-comment-alt"></i> Feedback
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state text-center">
+        <i class="fas fa-ticket-alt" style="font-size: 2rem; color: #ccc; margin-bottom: 1rem;"></i>
+        <p style="color: #666;">You haven't booked any tickets yet.</p>
+        <a href="{{ url_for('users.museums_list') }}" class="btn btn-primary" style="margin-top: 1rem;">Start
+            Exploring</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Wishlist Section -->
+<div style="margin-top: 3rem;">
+    <h3 style="margin-bottom: 1.5rem; color: var(--secondary-color);">My Wishlist <span
+            style="font-size: 0.8em; color: #888;">❤️</span></h3>
+    {% if wishlist %}
+    <div class="grid">
+        {% for museum in wishlist %}
+        <div class="card recommendation-card">
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <span class="badge" style="font-size: 0.7rem; margin-bottom: 0.5rem;">{{ museum.museum_type
+                        }}</span>
+                    <i class="fas fa-heart" style="color: #e31b23;"></i>
+                </div>
+                <h4 style="margin-top: 0; color: var(--text-color); font-size: 1.2rem;">{{ museum.museum_name }}</h4>
+                <p style="font-size: 0.9rem; color: var(--text-light);">
+                    <i class="fas fa-map-marker-alt"></i> {{ museum.city }}
+                </p>
+            </div>
+            <div class="flex gap-1" style="margin-top: 1rem;">
+                <a href="{{ url_for('users.museums_list', q=museum.museum_name) }}" class="btn btn-outline"
+                    style="font-size: 0.85rem; padding: 0.5rem; flex: 1; text-align: center;">View</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card text-center" style="padding: 2rem;">
+        <p style="color: #666;">Your wishlist is empty. ❤️</p>
+        <a href="{{ url_for('users.museums_list') }}" class="btn btn-outline" style="margin-top: 10px;">Find Museums</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Recommendations Section -->
+<div style="margin-top: 3rem;">
+    <h3 style="margin-bottom: 1.5rem; color: var(--text-color);">Recommended for You</h3>
+    <div class="grid">
+        {% if recommendations %}
+        {% for museum in recommendations %}
+        <div class="card recommendation-card">
+            <div>
+                <span class="badge" style="font-size: 0.7rem; margin-bottom: 0.5rem; display: inline-block;">{{
+                    museum.museum_type }}</span>
+                <h4 style="margin-top: 0; color: var(--text-color); font-size: 1.2rem;">{{ museum.museum_name }}</h4>
+                <p style="font-size: 0.9rem; color: var(--text-light);">
+                    <i class="fas fa-map-marker-alt"></i> {{ museum.city }}
+                </p>
+            </div>
+            <a href="{{ url_for('users.museums_list', q=museum.museum_name) }}" class="btn btn-outline"
+                style="align-self: flex-start; margin-top: 1rem; font-size: 0.85rem; padding: 0.5rem 1rem;">View
+                Details</a>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="card text-center" style="grid-column: 1 / -1;">
+            <p>Explore more museums to get personalized recommendations!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+<!-- Review Modal -->
+<div id="reviewModal" class="modal">
+    <div class="modal-content">
+        <h3 class="modal-title">Write a Review</h3>
+        <p class="modal-subtitle">
+            Sharing experience for: <br>
+            <span id="reviewMuseumName" class="modal-museum-name"></span>
+        </p>
+
+        <form id="reviewForm" method="POST" action="">
+            <label class="filter-label">Rating</label>
+            <select name="rating" required>
+                <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+                <option value="4">⭐⭐⭐⭐ Good</option>
+                <option value="3">⭐⭐⭐ Average</option>
+                <option value="2">⭐⭐ Poor</option>
+                <option value="1">⭐ Terrible</option>
+            </select>
+
+            <label class="filter-label">Your Experience</label>
+            <textarea name="comment" rows="4" placeholder="What did you enjoy the most?" required></textarea>
+
+            <div class="flex gap-1" style="margin-top: 2rem;">
+                <button type="button" class="btn btn-outline" style="flex: 1;"
+                    onclick="closeReviewModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Submit Review</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Feedback Modal -->
+<div id="feedbackModal" class="modal">
+    <div class="modal-content">
+        <h3 class="modal-title">Send Feedback</h3>
+        <p class="modal-subtitle">
+            Feedback for: <br>
+            <span id="feedbackMuseumName" class="modal-museum-name"></span>
+        </p>
+
+        <form id="feedbackForm" method="POST" action="">
+            <div class="alert alert-info" style="font-size: 0.9rem;">
+                <i class="fas fa-info-circle"></i> Your email ({{ session['email'] }}) will be shared with the museum.
+            </div>
+
+            <label class="filter-label">Message</label>
+            <textarea name="message" rows="4" placeholder="Report an issue or suggest an improvement..."
+                required></textarea>
+
+            <div class="flex gap-1" style="margin-top: 2rem;">
+                <button type="button" class="btn btn-outline" style="flex: 1;"
+                    onclick="closeFeedbackModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Send Feedback</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Review Modal Functions
+    function openReviewModal(museumId, museumName) {
+        document.getElementById('reviewModal').style.display = 'flex';
+        document.getElementById('reviewMuseumName').innerText = museumName;
+        document.getElementById('reviewForm').action = "/review/" + museumId;
+    }
+
+    function closeReviewModal() {
+        document.getElementById('reviewModal').style.display = 'none';
+    }
+
+    // Feedback Modal Functions
+    function openFeedbackModal(museumId, museumName) {
+        document.getElementById('feedbackModal').style.display = 'flex';
+        document.getElementById('feedbackMuseumName').innerText = museumName;
+        document.getElementById('feedbackForm').action = "/feedback/" + museumId;
+    }
+
+    function closeFeedbackModal() {
+        document.getElementById('feedbackModal').style.display = 'none';
+    }
+
+    // Close Modals on Outside Click
+    window.onclick = function (event) {
+        if (event.target == document.getElementById('reviewModal')) {
+            closeReviewModal();
+        }
+        if (event.target == document.getElementById('feedbackModal')) {
+            closeFeedbackModal();
+        }
+    }
+</script>
+{% endblock %}

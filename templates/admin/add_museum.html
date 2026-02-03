@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <div class="card">
+        <h2>Add New Museum</h2>
+        <form method="POST">
+            <label>Museum Name</label>
+            <input type="text" name="name" required>
+
+            <label>Location</label>
+            <input type="text" name="location" required>
+
+            <label>Category</label>
+            <select name="category" id="categorySelect" onchange="toggleCustomCategory()">
+                <option value="" disabled selected>Select a Category</option>
+                {% for category in categories %}
+                <option value="{{ category }}">{{ category }}</option>
+                {% endfor %}
+                <option value="Other">Add Custom Category...</option>
+            </select>
+
+            <div id="customCategoryDiv" style="display: none; margin-top: 10px;">
+                <label>Custom Category Name</label>
+                <input type="text" name="custom_category" id="customCategoryInput" placeholder="Enter new category">
+            </div>
+
+            <script>
+                function toggleCustomCategory() {
+                    var select = document.getElementById('categorySelect');
+                    var customDiv = document.getElementById('customCategoryDiv');
+                    var customInput = document.getElementById('customCategoryInput');
+
+                    if (select.value === 'Other') {
+                        customDiv.style.display = 'block';
+                        customInput.required = true;
+                    } else {
+                        customDiv.style.display = 'none';
+                        customInput.required = false;
+                        customInput.value = '';
+                    }
+                }
+            </script>
+
+            <label>Description</label>
+            <textarea name="description" rows="5" required></textarea>
+
+            <button type="submit" class="btn btn-primary">Add Museum</button>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

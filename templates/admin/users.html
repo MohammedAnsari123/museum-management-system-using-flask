@@ -1,0 +1,62 @@
+{% extends "admin/layout.html" %}
+
+{% block admin_content %}
+<div class="flex justify-between items-center mb-4">
+    <h2>Registered Users</h2>
+</div>
+
+<!-- Toolbar -->
+<form class="toolbar" method="GET">
+    <input type="text" name="q" class="search-input" placeholder="Search by Email..."
+        value="{{ request.args.get('q', '') }}">
+    <button type="submit" class="btn btn-primary">Search</button>
+    <a href="{{ url_for('admin.users') }}" class="btn btn-outline">Reset</a>
+</form>
+
+<div class="card">
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Joined</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.email }}</td>
+                    <td>
+                        <span class="badge"
+                            style="background: {% if user.role == 'admin' %}var(--secondary-color){% else %}var(--accent-color){% endif %};">
+                            {{ user.role }}
+                        </span>
+                    </td>
+                    <td>{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else 'N/A' }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" class="text-center">No users found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="pagination-controls">
+        <a href="{{ url_for('admin.users', page=current_page-1, q=request.args.get('q', '')) }}"
+            class="page-btn {% if current_page == 1 %}disabled{% endif %}">
+            <i class="fas fa-chevron-left"></i> Previous
+        </a>
+        <span class="page-info">Page {{ current_page }} of {{ total_pages }}</span>
+        <a href="{{ url_for('admin.users', page=current_page+1, q=request.args.get('q', '')) }}"
+            class="page-btn {% if current_page == total_pages %}disabled{% endif %}">
+            Next <i class="fas fa-chevron-right"></i>
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

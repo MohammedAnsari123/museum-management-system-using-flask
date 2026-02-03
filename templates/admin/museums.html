@@ -1,0 +1,74 @@
+{% extends "admin/layout.html" %}
+
+{% block admin_content %}
+<div class="flex justify-between items-center mb-4">
+    <h2>Manage Museums</h2>
+    <a href="{{ url_for('admin.add_museum') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Add New Museum</a>
+</div>
+
+<!-- Toolbar -->
+<form class="toolbar" method="GET">
+    <input type="text" name="q" class="search-input" placeholder="Search by Name or City..."
+        value="{{ request.args.get('q', '') }}">
+    <select name="type" class="filter-select">
+        <option value="">All Types</option>
+        {% for type in museum_types %}
+        <option value="{{ type }}" {% if request.args.get('type')==type %}selected{% endif %}>{{ type }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-primary">Search</button>
+    <a href="{{ url_for('admin.museums') }}" class="btn btn-outline">Reset</a>
+</form>
+
+<div class="card">
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Location</th>
+                    <th>Type</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for museum in museums %}
+                <tr>
+                    <td>{{ museum.museum_name }}</td>
+                    <td>{{ museum.city }}, {{ museum.state }}</td>
+                    <td><span class="badge">{{ museum.museum_type }}</span></td>
+                    <td>
+                        <div class="flex gap-2">
+                            <a href="{{ url_for('admin.edit_museum', id=museum._id) }}" class="btn btn-outline"
+                                style="padding: 0.4rem 0.8rem; font-size: 0.8rem;"><i class="fas fa-edit"></i></a>
+                            <a href="{{ url_for('admin.delete_museum', id=museum._id) }}" class="btn btn-primary"
+                                style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background-color: var(--danger-color);"
+                                onclick="return confirm('Are you sure?')"><i class="fas fa-trash"></i></a>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="text-center">No museums found matching your criteria.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="pagination-controls">
+        <a href="{{ url_for('admin.museums', page=current_page-1, q=request.args.get('q', ''), type=request.args.get('type', '')) }}"
+            class="page-btn {% if current_page == 1 %}disabled{% endif %}">
+            <i class="fas fa-chevron-left"></i> Previous
+        </a>
+        <span class="page-info">Page {{ current_page }} of {{ total_pages }}</span>
+        <a href="{{ url_for('admin.museums', page=current_page+1, q=request.args.get('q', ''), type=request.args.get('type', '')) }}"
+            class="page-btn {% if current_page == total_pages %}disabled{% endif %}">
+            Next <i class="fas fa-chevron-right"></i>
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
