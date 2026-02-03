@@ -2,32 +2,41 @@ import os
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 
-MODEL_ID = os.path.join(os.getcwd(), "models", "qwen_1_8b_chat")
+# Default to a smaller model for cloud deployment if local is missing
+CLOUD_MODEL_ID = "Qwen/Qwen2.5-0.5B-Instruct"
+LOCAL_MODEL_PATH = os.path.join(os.getcwd(), "models", "qwen_1_8b_chat")
 
 _generator = None
 
 def get_generator():
     """
     Lazily initializes the text generation pipeline.
-    Downloads the model from Hugging Face if not already cached.
+    Checks for local model first, then falls back to Hugging Face Hub.
     """
     global _generator
     if _generator is None:
         try:
-            print(f"Loading AI Model: {MODEL_ID}...")
+            # Determine which model to load
+            if os.path.exists(LOCAL_MODEL_PATH):
+                model_source = LOCAL_MODEL_PATH
+                print(f"Loading Local AI Model: {model_source}...")
+            else:
+                model_source = CLOUD_MODEL_ID
+                print(f"Local model not found. Downloading/Loading Cloud AI Model: {model_source}...")
             
             device = "cuda" if torch.cuda.is_available() else "cpu"
             print(f"Using device: {device}")
 
+            # Use float16 for GPU, float32 for CPU (or bfloat16 if supported)
             torch_dtype = torch.float16 if device == "cuda" else torch.float32
             
             _generator = pipeline(
                 "text-generation",
-                model=MODEL_ID,
+                model=model_source,
                 torch_dtype=torch_dtype,
                 device_map="auto"
             )
-            print(f"AI Model {MODEL_ID} loaded successfully.")
+            print(f"AI Model {model_source} loaded successfully.")
             
         except Exception as e:
             print(f"CRITICAL: Failed to load AI model. {e}")
@@ -59,7 +68,7 @@ def is_domain_relevant(query):
 
 def get_chatbot_response(query, history=None):
     """
-    Generates a response using the local Hugging Face model.
+    Generates a response using the loaded model.
     """
     if not query:
         return "I didn't catch that. Could you please repeat?"
@@ -98,11 +107,17 @@ def get_chatbot_response(query, history=None):
 
         generated_text = outputs[0]["generated_text"]
 
+        # Parse logic dependent on model output format, generally works for Qwen/Chat models
         if "<|im_start|>assistant" in generated_text:
             response = generated_text.split("<|im_start|>assistant")[-1].strip()
         else:
-            response = generated_text[len(prompt):].strip()
-            
+            # Fallback for models that might just append
+            # Try to remove the prompt from the start
+            if generated_text.startswith(prompt):
+                 response = generated_text[len(prompt):].strip()
+            else:
+                 response = generated_text
+
         return response
 
     except Exception as e:
