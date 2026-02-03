@@ -34,15 +34,19 @@ def login():
         email = request.form.get('email')
         password = request.form.get('password')
         
-        user = UserModel.find_by_email(email)
-        
-        if user and check_password_hash(user['password'], password):
-            session['user_id'] = str(user['_id'])
-            session['role'] = user['role']
-            session['email'] = user['email']
-            return redirect(url_for('users.dashboard'))
-        else:
-            flash('Invalid credentials.', 'danger')
+        try:
+            user = UserModel.find_by_email(email)
+            
+            if user and check_password_hash(user['password'], password):
+                session['user_id'] = str(user['_id'])
+                session['role'] = user['role']
+                session['email'] = user['email']
+                return redirect(url_for('users.dashboard'))
+            else:
+                flash('Invalid credentials.', 'danger')
+        except Exception as e:
+            print(f"Login Error: {e}")
+            flash('System error: Database connection failed. Please check IP Whitelist.', 'danger')
             
     return render_template('users/login.html')
 
